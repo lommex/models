@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/hokaccha/go-prettyjson"
 )
 
 // Engine ...
@@ -44,21 +45,45 @@ var engines []Engine
 
 func doSearch(resp http.ResponseWriter, req *http.Request) {
 
-	brandName := req.FormValue("brand")
-	brandSet := len(brandName) > 0
+	brandParam := req.FormValue("brand")
+	//brandSet := len(brandParam) > 0
 
-	typeName := req.FormValue("type")
-	typeSet := len(typeName) > 0
+	typeParam := req.FormValue("bodyType")
+	//bodyTypeSet := len(typeParam) > 0
 
-	//	if len(brandSet) != 0 {
-	fmt.Println(brandSet)
-	//}
-	//if len(bodyTypeSet) != 0 {
-	fmt.Println(typeSet)
-	//}
+	fuelParam := req.FormValue("fuel")
+	//fuelTypeSet := len(fuelParam) > 0
+
+	manufactureYearParam := req.FormValue("year")
+	//yearSet := len(manufactureYearParam) > 0
+
+	hpParam := req.FormValue("hp")
+
+	askForParam := ""
+
+	if len(brandParam) == 0 {
+		askForParam = "BRAND"
+	} else if len(typeParam) == 0 {
+		askForParam = "TYPE"
+	} else if len(fuelParam) == 0 {
+		askForParam = "FUEL"
+	} else if len(manufactureYearParam) == 0 {
+		askForParam = "YEAR"
+	} else if len(hpParam) == 0 {
+		askForParam = "HP"
+	} else {
+		askForParam = "FINISHED"
+	}
+	fmt.Println("AskForParam", askForParam)
+	//hpSet := len(hpParam) > 0
+	search(brandParam, typeParam, fuelParam, manufactureYearParam, hpParam)
 
 	resp.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(resp).Encode(brands)
+}
+
+func search(brandParam string, typeParam string, fuelParam string, manufactureYearParam string, hpParam string) string {
+	return "ABC"
 }
 
 func initInMemoryDB() {
@@ -86,7 +111,20 @@ func initInMemoryDB() {
 	brands = append(brands, Brand{ID: "2", BrandName: "BMW"})
 	brands = append(brands, Brand{ID: "3", BrandName: "Audi"})
 	brands = append(brands, Brand{ID: "4", BrandName: "VW"})
-	fmt.Println(brands)
+
+	//printPretty(brands)
+	printPretty(brands[0].Models[0].Hsn)
+	printPretty(brands[0].BrandName)
+
+}
+
+func printPretty(foo interface{}) {
+	s, _ := prettyjson.Marshal(foo)
+	fmt.Println(string(s))
+}
+
+func serveHTML(resp http.ResponseWriter, req *http.Request) {
+
 }
 
 func main() {
@@ -96,6 +134,14 @@ func main() {
 	initInMemoryDB()
 	// Create Route Handlers
 	router.HandleFunc("/api/search", doSearch).Methods("GET")
+	//router.HandleFunc("/api/web", serveHTML).Methods("GET")
+	//router.Handle("/web", http.FileServer(http.Dir(HTMLFolder)))
+	//	router.Handle("/web", http.FileServer(http.Dir("/Users/kaylummitsch/go/html")))
+
+	router.PathPrefix("/web/").Handler(http.StripPrefix("/web/", http.FileServer(http.Dir("/Users/kaylummitsch/go/src/models/html/")))) // works is because PathPrefix("/ui/")
+
+	//http.Handle("/tmpfiles/",
+	//	http.StripPrefix("/tmpfiles/", http.FileServer(http.Dir("/tmp"))))
 
 	http.ListenAndServe(":8000", router)
 }
